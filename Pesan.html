@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pemesanan Makanan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  
+<!-- Sampul Depan -->
+<div id="landing-page" class="fixed inset-0 bg-gradient-to-br from-green-300 to-green-600 z-50 flex flex-col justify-center items-center text-center px-4">
+  <h1 class="text-5xl font-bold text-white mb-4 drop-shadow-lg">Selamat Datang!</h1>
+  <p class="text-lg text-white mb-2">Silakan pesan makanan favoritmu</p>
+  
+  <input id="customer-name" type="text" placeholder="Nama Anda" class="mb-2 px-4 py-2 rounded-lg w-64 text-center shadow-md" />
+  
+  <button onclick="showMenuPage()" class="bg-white hover:bg-gray-100 text-green-700 font-semibold text-xl px-6 py-3 rounded-xl shadow-lg transition">
+    Mulai Pesan
+  </button>
+</div>
+
+<!-- Daftar Menu -->
+<div class="max-w-5xl mx-auto p-4 hidden" id="menu-page">
+  <h2 class="text-3xl font-bold mb-6 text-center">Menu Makanan</h2>
+  <div id="menu-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+
+  <div class="text-right mt-6">
+    <input id="table-number" type="text" placeholder="Nomor Meja" class="mb-4 px-4 py-2 rounded-lg w-64 text-center shadow-md" />
+    <p class="text-xl font-bold">Total: Rp <span id="total">0</span></p>
+    <button onclick="sendOrder()" class="mt-4 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded">
+      Kirim Pesanan via WhatsApp
+    </button>
+  </div>
+
+<script>
+const menus = [
+  { name: "Mie Ayam", price: 15000, img: "https://doyan-masak.com/wp-content/uploads/2022/02/mie-ayam-sederhana.jpeg" },
+  { name: "Bakso", price: 18000, img: "https://3.bp.blogspot.com/-CXEm7Ch4USk/WaF_bosHvlI/AAAAAAAADwM/MJoNuT0SwVYR3zkTydIoVkSv8_NQsKGYgCLcBGAs/s1600/cara%2Bmembuat%2Bbakso%2Burat.jpg" },
+  { name: "Steak Ayam", price: 25000, img: "https://asset.kompas.com/crops/WG0HBHsYEVx3G7EjN9KWqP2JnGI=/0x37:1280x890/750x500/data/photo/2021/02/09/602264bda959b.jpg" },
+  { name: "Steak Sapi", price: 35000, img: "https://3.bp.blogspot.com/-TxAjMDkiax4/UmFXC3-AP4I/AAAAAAAAAGU/JF60W7nesO0/s1600/resep+steak+daging+sapi+spesial+lezat.jpg" },
+  { name: "Nasi Padang", price: 20000, img: "https://images.deliveryhero.io/image/fd-my/LH/bakr-hero.jpg" },
+  { name: "Es Teh", price: 5000, img: "https://www.astronauts.id/blog/wp-content/uploads/2023/03/Beberapa-Resep-Es-Teh-Manis-Yang-Enggak-Ngebosenin-Untuk-Buka-Puasa.jpg" },
+  { name: "Es Jeruk", price: 6000, img: "https://www.cookmeindonesian.com/wp-content/uploads/2021/09/es-jeruk-final2.jpg" },
+];
+
+let cart = new Array(menus.length).fill(0);
+let orderHistory = [];
+
+function showMenuPage() {
+  document.getElementById("landing-page").style.display = "none";
+  document.getElementById("menu-page").classList.remove("hidden");
+}
+
+function updateCart(index, change) {
+  cart[index] = Math.max(0, cart[index] + change);
+  renderMenu();
+}
+
+function renderMenu() {
+  const container = document.getElementById("menu-container");
+  container.innerHTML = "";
+  let total = 0;
+
+  menus.forEach((menu, index) => {
+    const subtotal = menu.price * cart[index];
+    total += subtotal;
+
+    container.innerHTML += `
+      <div class="bg-white rounded-lg shadow p-4 flex flex-col">
+        <img src="${menu.img}" alt="${menu.name}" class="w-full h-48 object-cover rounded-lg mb-4">
+        <h3 class="text-xl font-semibold">${menu.name}</h3>
+        <p class="text-gray-600 mb-2">Rp ${menu.price}</p>
+        <div class="flex items-center mb-2">
+          <button onclick="updateCart(${index}, -1)" class="bg-red-500 text-white px-2 py-1 rounded">-</button>
+          <span class="mx-3">${cart[index]}</span>
+          <button onclick="updateCart(${index}, 1)" class="bg-green-500 text-white px-2 py-1 rounded">+</button>
+        </div>
+        <p class="text-sm text-gray-700">Subtotal: Rp ${subtotal}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("total").innerText = total;
+}
+
+function sendOrder() {
+  const name = document.getElementById("customer-name").value.trim();
+  const table = document.getElementById("table-number").value.trim();
+
+  if (!name || !table) {
+    alert("Silakan isi Nama dan Nomor Meja terlebih dahulu.");
+    return;
+  }
+
+  let message = `Halo, saya ingin memesan:\nNama: ${name}\nNomor Meja: ${table}\n\n`;
+  let hasOrder = false;
+  let orderItems = [];
+
+  menus.forEach((menu, index) => {
+    if (cart[index] > 0) {
+      message += `- ${menu.name} x${cart[index]} = Rp ${menu.price * cart[index]}\n`;
+      orderItems.push(`${menu.name} x${cart[index]}`);
+      hasOrder = true;
+    }
+  });
+
+  if (!hasOrder) {
+    alert("Anda belum memilih menu apapun.");
+    return;
+  }
+
+  const total = cart.reduce((sum, qty, i) => sum + qty * menus[i].price, 0);
+  message += `\nTotal: Rp ${total}`;
+
+  const phoneNumber = "6283107936220"; // Ganti dengan nomor WA penjual
+  const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+  window.open(url, "_blank");
+
+  // Tambahkan ke riwayat
+  const orderId = Date.now();
+  orderHistory.push({
+    id: orderId,
+    name,
+    table,
+    items: orderItems,
+    total
+  });
+
+  updateHistory();
+  cart = new Array(menus.length).fill(0);
+  renderMenu();
+}
+
+function updateHistory() {
+  const container = document.getElementById("order-history");
+  container.innerHTML = "";
+
+  orderHistory.forEach(order => {
+    const itemText = order.items.join(', ');
+    const orderElement = document.createElement("li");
+    orderElement.className = "bg-white p-4 rounded shadow flex justify-between items-center";
+
+    orderElement.innerHTML = `
+      <div>
+        <p><strong>${order.name}</strong> (Meja ${order.table})</p>
+        <p>${itemText}</p>
+        <p>Total: Rp ${order.total}</p>
+      </div>
+      <button onclick="finishOrder(${order.id})" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+        Selesai
+      </button>
+    `;
+
+    container.appendChild(orderElement);
+  });
+}
+
+function finishOrder(id) {
+  orderHistory = orderHistory.filter(order => order.id !== id);
+  updateHistory();
+}
+
+renderMenu();
+</script>
+
+</body>
+</html>
